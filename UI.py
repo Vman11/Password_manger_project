@@ -7,11 +7,14 @@ import numpy as np
 import random
 import image_hash
 import pyperclip
+from pathlib import Path
 
 class MainMenu:
-    def __init__(self, master):
+    def __init__(self, master,OG_path,S_path):
         self.master = master
         self.master.title("Main Menu")
+        self.OG_path= OG_path
+        self.S_path = S_path
         
         self.label = tk.Label(master, text="Main Menu", font=("Helvetica", 16))
         self.label.pack(pady=10)
@@ -41,8 +44,8 @@ class MainMenu:
             if label == None or label == '':
                 messagebox.showinfo("ERROR","ERROR PLEASE ADD A NAME: IMAGE IGNORED")
             else:
-                image_hash.move_file(file_path,'D:\Password Manager Project\Original_Image\\'+str(label)+'.png')
-                cv2.imwrite('Secure_Images\\'+str(label)+'.png', changed_image)
+                image_hash.move_file(file_path,self.OG_path+r'/'+str(label)+'.png')
+                cv2.imwrite(self.S_path+r'/'+str(label)+'.png', changed_image)
                 messagebox.showinfo("Success!","Image Added!")
 
 
@@ -52,11 +55,11 @@ class MainMenu:
         if file_path:
             last_backslash_index = file_path.rfind('/')
             print()
-            for file_name in os.listdir("Secure_Images/"):
+            for file_name in os.listdir(S_path):
                 print(file_name)
                 print(file_path[last_backslash_index+1:])
                 if file_name ==file_path[last_backslash_index+1:]:
-                     with open("D:\\Password Manager Project\\Secure_Images\\"+str(file_name),"rb") as f:
+                     with open(self.S_path+r'/'+str(file_name),"rb") as f:
                         bytes = f.read() # read entire file as bytes
                         readable_hash = hashlib.sha256(bytes).hexdigest()
                         messagebox.showinfo("Success!","Password Added to clipboard!")
@@ -98,8 +101,18 @@ class UI2:
         root.deiconify()  # Restore main menu
 
 if __name__ == "__main__":
+    home_dir = Path.home()
+    print(home_dir)
+    OG_path =os.path.join(home_dir,'Orginal_images')
+    if not os.path.exists(OG_path):
+        os.makedirs(OG_path)
+    
+    S_path =os.path.join(home_dir,'Secure_images')
+    if not os.path.exists(S_path):
+        os.makedirs(S_path)
+
     root = tk.Tk()
     lbl = tk.Label(root, text = "") 
     lbl.pack() 
-    main_menu = MainMenu(root)
+    main_menu = MainMenu(root,OG_path,S_path)
     root.mainloop()
