@@ -3,7 +3,7 @@ import os
 import cv2
 import numpy as np
 import random
-
+import shutil
 
 def rename_file(old_name, new_name):
     try:
@@ -21,7 +21,7 @@ def move_file(source, destination):
             # Check if the destination directory exists
             if os.path.exists(os.path.dirname(destination)):
                 # Perform the move operation
-                os.rename(source, destination)
+                shutil.copy(source, destination)
                 print(f"File moved from {source} to {destination}")
             else:
                 print(f"Destination directory {os.path.dirname(destination)} does not exist")
