@@ -8,15 +8,22 @@ import random
 import image_hash
 import pyperclip
 from pathlib import Path
+import decode as decode
+import code as encode
+import sys
+
 
 class MainMenu:
     def __init__(self, master,OG_path,S_path):
         self.master = master
-        self.master.title("Main Menu")
+        self.master.title("PIC PASS")
         self.OG_path= OG_path
         self.S_path = S_path
+        self.pwd =  simpledialog.askstring("Password", "Please enter a Password to encrypt/decrypt files:")
+
+
         
-        self.label = tk.Label(master, text="Main Menu", font=("Helvetica", 16))
+        self.label = tk.Label(master, text="PIC PASS", font=("Helvetica", 16))
         self.label.pack(pady=10)
 
         self.choose_file_button = tk.Button(master, text="New Password", command=self.choose_file)
@@ -35,35 +42,97 @@ class MainMenu:
         return label
 
     def choose_file(self):
+
+        HIT = 0
         file_path = filedialog.askopenfilename()
         if file_path:
             messagebox.showinfo("File Selected", f"You selected: {file_path}")
+            if (decode.decode(self.pwd,self.OG_path) == -1):
+                messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                sys.exit(1)
+
+            if (decode.decode(self.pwd,self.S_path) == -1):
+                messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                sys.exit(1)
             changed_image = image_hash.random_change_image(file_path)
             label = self.get_input_label()
-            print(label)
-            if label == None or label == '':
-                messagebox.showinfo("ERROR","ERROR PLEASE ADD A NAME: IMAGE IGNORED")
+            image = cv2.imread(file_path)
+            for file_name in os.listdir(self.OG_path):
+                current_image = cv2.imread(self.OG_path+'/'+file_name)
+                if image.shape == current_image.shape and not(np.bitwise_xor(image,current_image).any()):
+
+                    HIT =1
+
+            if label == None or label == '' or HIT ==1:
+                if(encode.encode(self.pwd,self.OG_path) == -1):
+                    messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                    sys.exit(1)
+
+                if (encode.encode(self.pwd,self.S_path) == -1):
+                    messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                    sys.exit(1)
+                if HIT == 1:
+                    messagebox.showinfo("ERROR","IMAGE ALREADY USED")
+                else:
+                    messagebox.showinfo("ERROR","ERROR PLEASE ADD A NAME: IMAGE IGNORED")
             else:
                 image_hash.move_file(file_path,self.OG_path+r'/'+str(label)+'.png')
-                cv2.imwrite(self.S_path+r'/'+str(label)+'.png', changed_image)
+                cv2.imwrite(self.S_path+r'/'+hashlib.sha256(label.encode('utf-8')).hexdigest()+'.png', changed_image)
+                print(hashlib.sha256(label.encode('utf-8')).hexdigest())
+                if(encode.encode(self.pwd,self.OG_path) == -1):
+                    messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                    sys.exit(1)
+
+                if (encode.encode(self.pwd,self.S_path) == -1):
+                    messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                    sys.exit(1)
                 messagebox.showinfo("Success!","Image Added!")
 
 
 
+
+
     def open_ui1(self):
+
         file_path = filedialog.askopenfilename()
         if file_path:
             last_backslash_index = file_path.rfind('/')
-            print()
-            for file_name in os.listdir(S_path):
-                print(file_name)
-                print(file_path[last_backslash_index+1:])
-                if file_name ==file_path[last_backslash_index+1:]:
-                     with open(self.S_path+r'/'+str(file_name),"rb") as f:
+            if (decode.decode(self.pwd,self.OG_path) == -1):
+                messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                sys.exit(1)
+
+            if (decode.decode(self.pwd,self.S_path) == -1):
+                messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                sys.exit(1)
+            image = cv2.imread(file_path)
+            for file_name in os.listdir(self.OG_path):
+                current_image = cv2.imread(self.OG_path+'/'+file_name)
+                if image.shape == current_image.shape and not(np.bitwise_xor(image,current_image).any()):
+                    last_backslash_index = file_name.rfind('.')
+                    result = hashlib.sha256(file_name[:last_backslash_index].encode('utf-8')).hexdigest()
+                    with open(self.S_path+r'/'+hashlib.sha256(file_name[:last_backslash_index].encode('utf-8')).hexdigest()+'.png',"rb") as f:
                         bytes = f.read() # read entire file as bytes
                         readable_hash = hashlib.sha256(bytes).hexdigest()
+                        if(encode.encode(self.pwd,self.OG_path) == -1):
+                            messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                            sys.exit(1)
+
+                        if (encode.encode(self.pwd,self.S_path) == -1):
+                            messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                            sys.exit(1)
                         messagebox.showinfo("Success!","Password Added to clipboard!")
                         pyperclip.copy(readable_hash)
+                else:
+                    if(encode.encode(self.pwd,self.OG_path) == -1):
+                        messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                        sys.exit(1)
+
+                    if (encode.encode(self.pwd,self.S_path) == -1):
+                        messagebox.showinfo("ERROR","INCORRECT PASSWORD TERMINATING PROGRAM")
+                        sys.exit(1)
+ 
+                    messagebox.showinfo("Error!","Image not found...")
+
 
 
     def quit_program(self):
@@ -114,5 +183,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     lbl = tk.Label(root, text = "") 
     lbl.pack() 
-    main_menu = MainMenu(root,OG_path,S_path)
+    main_menu = MainMenu(root,OG_path,S_path,)
     root.mainloop()
